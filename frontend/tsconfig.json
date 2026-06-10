@@ -1,0 +1,77 @@
+{
+  "compilerOptions": {
+    
+    /* -------------------------------------------------------------------------
+       Language & Environment
+       ------------------------------------------------------------------------- */
+    "target": "ES2017",
+    "lib": ["dom", "dom.iterable", "esnext"],
+    "allowJs": true,
+    "skipLibCheck": true,
+
+    /* -------------------------------------------------------------------------
+       Strict Type Checking — all on
+       ------------------------------------------------------------------------- */
+    "strict": true,
+    "noEmit": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "noFallthroughCasesInSwitch": true,
+    "noUncheckedIndexedAccess": true,
+
+    /* -------------------------------------------------------------------------
+       Module Resolution
+       ------------------------------------------------------------------------- */
+    "esModuleInterop": true,
+    "module": "esnext",
+    "moduleResolution": "bundler",
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+
+    /* -------------------------------------------------------------------------
+       JSX
+       ------------------------------------------------------------------------- */
+    "jsx": "preserve",
+
+    /* -------------------------------------------------------------------------
+       Plugins — Next.js TypeScript plugin for app router
+       ------------------------------------------------------------------------- */
+    "plugins": [
+      {
+        "name": "next"
+      }
+    ],
+
+    /* -------------------------------------------------------------------------
+       Path aliases — mirrors the folder structure
+       ------------------------------------------------------------------------- */
+    "baseUrl": ".",
+    "paths": {
+      "@/*":             ["./src/*"],
+      "@/components/*":  ["./src/components/*"],
+      "@/app/*":         ["./src/app/*"],
+      "@/lib/*":         ["./src/lib/*"],
+      "@/hooks/*":       ["./src/hooks/*"],
+      "@/store/*":       ["./src/store/*"],
+      "@/types/*":       ["./src/types/*"],
+      "@/styles/*":      ["./src/app/*"]
+    },
+    
+
+    /* -------------------------------------------------------------------------
+       Incremental compilation
+       ------------------------------------------------------------------------- */
+    "incremental": true
+  },
+
+  "include": [
+    "next-env.d.ts",
+    "**/*.ts",
+    "**/*.tsx",
+    ".next/types/**/*.ts"
+  ],
+
+  "exclude": [
+    "node_modules"
+  ]
+}

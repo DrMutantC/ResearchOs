@@ -1,0 +1,244 @@
+version: "3.9"
+
+# =============================================================================
+# ResearchOS — Docker Compose (Local Development)
+# =============================================================================
+# Services:
+#   - postgres    PostgreSQL 16 + pgvector extension
+#   - redis       Redis 7 (cache + Celery broker)
+#   - backend     FastAPI app (hot reload)
+#   - worker      Celery worker (async tasks)
+#   - frontend    Next.js 15 app (hot reload)
+#
+# Usage:
+#   docker compose up --build          # first run
+#   docker compose up                  # subsequent runs
+#   docker compose down -v             # stop + remove volumes
+# =============================================================================
+
+services:
+
+  # ---------------------------------------------------------------------------
+  # PostgreSQL 16 with pgvector
+  # ---------------------------------------------------------------------------
+  postgres:
+    image: pgvector/pgvector:pg16
+    container_name: researchos_postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-researchos}
+      POSTGRES_USER: ${POSTGRES_USER:-researchos_user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-devpassword}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./backend/scripts/init_db.sql:/docker-entrypoint-initdb.d/init_db.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-researchos_user} -d ${POSTGRES_DB:-researchos}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - researchos_network
+
+  # ---------------------------------------------------------------------------
+  # Redis 7
+  # ---------------------------------------------------------------------------
+  redis:
+    image: redis:7-alpine
+    container_name: researchos_redis
+    restart: unless-stopped
+    command: >
+      redis-server
+      --requirepass ${REDIS_PASSWORD:-devredispass}
+      --maxmemory 512mb
+      --maxmemory-policy allkeys-lru
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD:-devredispass}", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - researchos_network
+
+  # ---------------------------------------------------------------------------
+  # FastAPI Backend
+  # ---------------------------------------------------------------------------
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+      target: development
+    container_name: researchos_backend
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:-researchos_user}:${POSTGRES_PASSWORD:-devpassword}@postgres:5432/${POSTGRES_DB:-researchos}
+      REDIS_URL: redis://:${REDIS_PASSWORD:-devredispass}@redis:6379/0
+      CELERY_BROKER_URL: redis://:${REDIS_PASSWORD:-devredispass}@redis:6379/1
+      CELERY_RESULT_BACKEND: redis://:${REDIS_PASSWORD:-devredispass}@redis:6379/2
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./backend:/app
+      - /app/__pycache__
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    command: >
+      uvicorn app.main:app
+      --host 0.0.0.0
+      --port 8000
+      --reload
+      --reload-dir /app/app
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 15s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+    networks:
+      - researchos_network
+
+  # ---------------------------------------------------------------------------
+  # Celery Worker (async PDF processing, embeddings, lit review tasks)
+  # ---------------------------------------------------------------------------
+  worker:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+      target: development
+    container_name: researchos_worker
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:-researchos_user}:${POSTGRES_PASSWORD:-devpassword}@postgres:5432/${POSTGRES_DB:-researchos}
+      REDIS_URL: redis://:${REDIS_PASSWORD:-devredispass}@redis:6379/0
+      CELERY_BROKER_URL: redis://:${REDIS_PASSWORD:-devredispass}@redis:6379/1
+      CELERY_RESULT_BACKEND: redis://:${REDIS_PASSWORD:-devredispass}@redis:6379/2
+    volumes:
+      - ./backend:/app
+      - /app/__pycache__
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      backend:
+        condition: service_healthy
+    command: >
+      celery -A app.tasks.celery_app worker
+      --loglevel=info
+      --concurrency=4
+      --queues=pdf,embeddings,litreview,default
+    networks:
+      - researchos_network
+
+  # ---------------------------------------------------------------------------
+  # Celery Beat (scheduled tasks — trend monitoring, alerts)
+  # ---------------------------------------------------------------------------
+  beat:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+      target: development
+    container_name: researchos_beat
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:-researchos_user}:${POSTGRES_PASSWORD:-devpassword}@postgres:5432/${POSTGRES_DB:-researchos}
+      REDIS_URL: redis://:${REDIS_PASSWORD:-devredispass}@redis:6379/0
+      CELERY_BROKER_URL: redis://:${REDIS_PASSWORD:-devredispass}@redis:6379/1
+      CELERY_RESULT_BACKEND: redis://:${REDIS_PASSWORD:-devredispass}@redis:6379/2
+    volumes:
+      - ./backend:/app
+    depends_on:
+      - worker
+    command: >
+      celery -A app.tasks.celery_app beat
+      --loglevel=info
+      --scheduler django_celery_beat.schedulers:DatabaseScheduler
+    networks:
+      - researchos_network
+
+  # ---------------------------------------------------------------------------
+  # Next.js Frontend
+  # ---------------------------------------------------------------------------
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      target: development
+    container_name: researchos_frontend
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      NEXT_PUBLIC_API_URL: http://localhost:8000/api/v1
+      NEXTAUTH_URL: http://localhost:3000
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+      - /app/.next
+    depends_on:
+      backend:
+        condition: service_healthy
+    command: npm run dev
+    networks:
+      - researchos_network
+
+  # ---------------------------------------------------------------------------
+  # Flower — Celery task monitoring (dev only)
+  # ---------------------------------------------------------------------------
+  flower:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+      target: development
+    container_name: researchos_flower
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      CELERY_BROKER_URL: redis://:${REDIS_PASSWORD:-devredispass}@redis:6379/1
+    ports:
+      - "5555:5555"
+    depends_on:
+      - redis
+      - worker
+    command: >
+      celery -A app.tasks.celery_app flower
+      --port=5555
+      --basic_auth=admin:devpassword
+    networks:
+      - researchos_network
+    profiles:
+      - debug
+
+# =============================================================================
+# Volumes
+# =============================================================================
+volumes:
+  postgres_data:
+    driver: local
+  redis_data:
+    driver: local
+
+# =============================================================================
+# Networks
+# =============================================================================
+networks:
+  researchos_network:
+    driver: bridge

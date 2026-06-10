@@ -1,0 +1,423 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* =============================================================================
+   ResearchOS — Global Styles
+   Dark-first academic workspace
+   ============================================================================= */
+
+/* -----------------------------------------------------------------------------
+   CSS Variables — Light Mode
+   ----------------------------------------------------------------------------- */
+@layer base {
+  :root {
+    /* shadcn/ui base tokens */
+    --background:         0 0% 100%;
+    --foreground:         224 71.4% 4.1%;
+
+    --card:               0 0% 100%;
+    --card-foreground:    224 71.4% 4.1%;
+
+    --popover:            0 0% 100%;
+    --popover-foreground: 224 71.4% 4.1%;
+
+    --primary:            262.1 83.3% 57.8%;
+    --primary-foreground: 210 20% 98%;
+
+    --secondary:          220 14.3% 95.9%;
+    --secondary-foreground: 220.9 39.3% 11%;
+
+    --muted:              220 14.3% 95.9%;
+    --muted-foreground:   220 8.9% 46.1%;
+
+    --accent:             220 14.3% 95.9%;
+    --accent-foreground:  220.9 39.3% 11%;
+
+    --destructive:        0 84.2% 60.2%;
+    --destructive-foreground: 210 20% 98%;
+
+    --border:             220 13% 91%;
+    --input:              220 13% 91%;
+    --ring:               262.1 83.3% 57.8%;
+
+    --radius:             0.5rem;
+
+    /* Charts */
+    --chart-1:            12 76% 61%;
+    --chart-2:            173 58% 39%;
+    --chart-3:            197 37% 24%;
+    --chart-4:            43 74% 66%;
+    --chart-5:            27 87% 67%;
+
+    /* Sidebar */
+    --sidebar-background:          0 0% 98%;
+    --sidebar-foreground:          240 5.3% 26.1%;
+    --sidebar-primary:             240 5.9% 10%;
+    --sidebar-primary-foreground:  0 0% 98%;
+    --sidebar-accent:              240 4.8% 95.9%;
+    --sidebar-accent-foreground:   240 5.9% 10%;
+    --sidebar-border:              220 13% 91%;
+    --sidebar-ring:                217.2 91.2% 59.8%;
+
+    /* Fonts */
+    --font-inter: "Inter", system-ui, sans-serif;
+    --font-mono:  "JetBrains Mono", "Fira Code", monospace;
+    --font-serif: "Lora", Georgia, serif;
+
+    /* ResearchOS workspace layout */
+    --sidebar-width:      16rem;
+    --panel-width:        20rem;
+    --topbar-height:      3.5rem;
+
+    /* ResearchOS semantic colors */
+    --research-cite:      173 58% 39%;
+    --research-verify:    217 91% 60%;
+    --research-gap:       38 92% 50%;
+    --research-warning:   0 84% 60%;
+
+    /* Shimmer animation gradient */
+    --shimmer-gradient: linear-gradient(
+      90deg,
+      transparent 0%,
+      hsl(var(--muted-foreground) / 0.08) 50%,
+      transparent 100%
+    );
+  }
+
+  /* ---------------------------------------------------------------------------
+     CSS Variables — Dark Mode
+     --------------------------------------------------------------------------- */
+  .dark {
+    --background:         224 71.4% 4.1%;
+    --foreground:         210 20% 98%;
+
+    --card:               224 71.4% 4.1%;
+    --card-foreground:    210 20% 98%;
+
+    --popover:            224 71.4% 4.1%;
+    --popover-foreground: 210 20% 98%;
+
+    --primary:            263.4 70% 50.4%;
+    --primary-foreground: 210 20% 98%;
+
+    --secondary:          215 27.9% 16.9%;
+    --secondary-foreground: 210 20% 98%;
+
+    --muted:              215 27.9% 16.9%;
+    --muted-foreground:   217.9 10.6% 64.9%;
+
+    --accent:             215 27.9% 16.9%;
+    --accent-foreground:  210 20% 98%;
+
+    --destructive:        0 62.8% 30.6%;
+    --destructive-foreground: 210 20% 98%;
+
+    --border:             215 27.9% 16.9%;
+    --input:              215 27.9% 16.9%;
+    --ring:               263.4 70% 50.4%;
+
+    /* Charts */
+    --chart-1:            220 70% 50%;
+    --chart-2:            160 60% 45%;
+    --chart-3:            30 80% 55%;
+    --chart-4:            280 65% 60%;
+    --chart-5:            340 75% 55%;
+
+    /* Sidebar */
+    --sidebar-background:          240 5.9% 10%;
+    --sidebar-foreground:          240 4.8% 95.9%;
+    --sidebar-primary:             224.3 76.3% 48%;
+    --sidebar-primary-foreground:  0 0% 100%;
+    --sidebar-accent:              240 3.7% 15.9%;
+    --sidebar-accent-foreground:   240 4.8% 95.9%;
+    --sidebar-border:              240 3.7% 15.9%;
+    --sidebar-ring:                217.2 91.2% 59.8%;
+  }
+}
+
+/* -----------------------------------------------------------------------------
+   Base element styles
+   ----------------------------------------------------------------------------- */
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  html {
+    @apply scroll-smooth;
+    font-feature-settings: "rlig" 1, "calt" 1;
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+    font-family: var(--font-inter);
+  }
+
+  /* Focus visible — keyboard navigation */
+  :focus-visible {
+    @apply outline-none ring-2 ring-ring ring-offset-2 ring-offset-background;
+  }
+
+  /* Remove default focus for mouse users */
+  :focus:not(:focus-visible) {
+    @apply outline-none;
+  }
+
+  /* Scrollbar — dark workspace style */
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+
+  ::-webkit-scrollbar-track {
+    @apply bg-transparent;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    @apply bg-border rounded-full;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    @apply bg-muted-foreground/40;
+  }
+
+  /* Selection highlight */
+  ::selection {
+    @apply bg-primary/20 text-foreground;
+  }
+
+  /* Headings */
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-semibold tracking-tight;
+  }
+
+  /* Links */
+  a {
+    @apply transition-colors;
+  }
+
+  /* Code blocks */
+  code {
+    @apply font-mono text-sm bg-muted px-1.5 py-0.5 rounded;
+  }
+
+  pre {
+    @apply font-mono text-sm bg-muted p-4 rounded-lg overflow-x-auto;
+  }
+
+  pre code {
+    @apply bg-transparent p-0;
+  }
+}
+
+/* -----------------------------------------------------------------------------
+   Component layer — reusable patterns
+   ----------------------------------------------------------------------------- */
+@layer components {
+
+  /* Workspace layout */
+  .workspace-layout {
+    @apply flex h-screen overflow-hidden bg-background;
+  }
+
+  .workspace-sidebar {
+    @apply hidden md:flex flex-col;
+    width: var(--sidebar-width);
+    @apply border-r border-border bg-sidebar shrink-0;
+  }
+
+  .workspace-main {
+    @apply flex flex-col flex-1 overflow-hidden;
+  }
+
+  .workspace-topbar {
+    @apply flex items-center border-b border-border bg-background px-4 shrink-0;
+    height: var(--topbar-height);
+  }
+
+  .workspace-content {
+    @apply flex flex-1 overflow-hidden;
+  }
+
+  .workspace-center {
+    @apply flex flex-col flex-1 overflow-y-auto;
+  }
+
+  .workspace-panel {
+    @apply hidden xl:flex flex-col border-l border-border bg-sidebar shrink-0 overflow-y-auto;
+    width: var(--panel-width);
+  }
+
+  /* Paper card */
+  .paper-card {
+    @apply rounded-lg border border-border bg-card p-4 transition-all duration-200;
+    @apply hover:border-primary/40 hover:shadow-md hover:shadow-primary/5;
+    @apply cursor-pointer;
+  }
+
+  .paper-card-title {
+    @apply font-medium text-sm leading-snug text-foreground line-clamp-2;
+  }
+
+  .paper-card-meta {
+    @apply text-xs text-muted-foreground mt-1 flex flex-wrap gap-x-2 gap-y-0.5;
+  }
+
+  .paper-card-abstract {
+    @apply text-xs text-muted-foreground mt-2 line-clamp-3 leading-relaxed;
+  }
+
+  /* AI message — evidence-first style */
+  .ai-message {
+    @apply rounded-lg border border-border bg-card/50 p-4 text-sm leading-relaxed;
+  }
+
+  .ai-message-claim {
+    @apply text-foreground;
+  }
+
+  .ai-message-citation {
+    @apply inline-flex items-center gap-0.5 text-xs font-medium text-research-verify
+           bg-blue-500/10 px-1.5 py-0.5 rounded cursor-pointer
+           hover:bg-blue-500/20 transition-colors;
+  }
+
+  .ai-message-gap {
+    @apply inline-flex items-center gap-1 text-xs font-medium text-research-gap
+           bg-amber-500/10 px-2 py-1 rounded-md border border-amber-500/20;
+  }
+
+  .ai-message-verified {
+    @apply flex items-center gap-1.5 text-xs text-research-cite mt-2;
+  }
+
+  /* Streaming cursor */
+  .streaming-cursor::after {
+    content: "▋";
+    @apply animate-cursor-blink text-primary ml-0.5;
+  }
+
+  /* Citation badge */
+  .citation-badge {
+    @apply inline-flex items-center gap-1 text-xs font-mono
+           bg-research-cite/10 text-research-cite border border-research-cite/20
+           px-1.5 py-0.5 rounded;
+  }
+
+  /* Research gap callout */
+  .gap-callout {
+    @apply flex gap-3 rounded-lg border border-amber-500/30 bg-amber-500/5 p-3 text-sm;
+  }
+
+  .gap-callout-icon {
+    @apply text-research-gap mt-0.5 shrink-0;
+  }
+
+  /* Skeleton loader */
+  .skeleton {
+    @apply rounded-md bg-muted overflow-hidden relative;
+  }
+
+  .skeleton::after {
+    content: "";
+    @apply absolute inset-0;
+    background: var(--shimmer-gradient);
+    background-size: 200% 100%;
+    @apply animate-shimmer;
+  }
+
+  /* Confidence indicator */
+  .confidence-high   { @apply text-research-cite; }
+  .confidence-medium { @apply text-research-gap; }
+  .confidence-low    { @apply text-research-warning; }
+
+  /* Search result highlight */
+  .search-highlight {
+    @apply bg-primary/20 text-primary rounded px-0.5;
+  }
+
+  /* PDF viewer container */
+  .pdf-viewer {
+    @apply flex flex-col h-full overflow-hidden bg-muted/30;
+  }
+
+  .pdf-viewer-toolbar {
+    @apply flex items-center gap-2 border-b border-border bg-background px-4 py-2 shrink-0;
+  }
+
+  .pdf-viewer-canvas {
+    @apply flex-1 overflow-y-auto flex flex-col items-center gap-4 p-4;
+  }
+
+  /* Subscription tier badge */
+  .tier-free    { @apply bg-muted text-muted-foreground border border-border; }
+  .tier-pro     { @apply bg-primary/10 text-primary border border-primary/30; }
+  .tier-max     { @apply bg-amber-500/10 text-amber-500 border border-amber-500/30; }
+}
+
+/* -----------------------------------------------------------------------------
+   Utility layer — one-off helpers
+   ----------------------------------------------------------------------------- */
+@layer utilities {
+
+  /* Text truncation */
+  .line-clamp-2 { -webkit-line-clamp: 2; }
+  .line-clamp-3 { -webkit-line-clamp: 3; }
+
+  /* Glassmorphism panel (used sparingly) */
+  .glass {
+    @apply backdrop-blur-md bg-background/80 border border-border/50;
+  }
+
+  /* No scrollbar */
+  .no-scrollbar::-webkit-scrollbar { display: none; }
+  .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+  /* Animated gradient text (landing page hero) */
+  .gradient-text {
+    @apply bg-clip-text text-transparent;
+    background-image: linear-gradient(135deg, #6366f1 0%, #a78bfa 50%, #7c3aed 100%);
+  }
+
+  /* Full bleed section */
+  .full-bleed {
+    width: 100vw;
+    margin-left: calc(50% - 50vw);
+  }
+
+  /* ResearchOS semantic color utilities */
+  .text-research-cite    { color: hsl(var(--research-cite)); }
+  .text-research-verify  { color: hsl(var(--research-verify)); }
+  .text-research-gap     { color: hsl(var(--research-gap)); }
+  .text-research-warning { color: hsl(var(--research-warning)); }
+
+  .bg-research-cite    { background-color: hsl(var(--research-cite)); }
+  .bg-research-verify  { background-color: hsl(var(--research-verify)); }
+  .bg-research-gap     { background-color: hsl(var(--research-gap)); }
+  .bg-research-warning { background-color: hsl(var(--research-warning)); }
+}
+
+/* -----------------------------------------------------------------------------
+   Keyframe animations
+   ----------------------------------------------------------------------------- */
+@keyframes shimmer {
+  0%   { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+@keyframes cursor-blink {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0; }
+}
+
+.animate-shimmer {
+  animation: shimmer 2s infinite linear;
+}
+
+.animate-cursor-blink {
+  animation: cursor-blink 1s step-end infinite;
+}
